@@ -36,7 +36,7 @@ Every feed is tied to its config entry:
 
 The trailing `.ics` matters for some subscribers (Google Calendar in particular) that decide how to treat a URL partly from its extension — without it, an app may silently accept the subscription and never actually show any events. Feeds created before this `.ics` suffix was added keep working at their original URL too (without the extension), so nothing breaks for existing subscriptions — but if you're seeing an empty calendar in an app you just added, re-copying the URL from the integration's reconfigure/options screen is the first thing to try.
 
-Both the local and external URL (if configured in Home Assistant) are shown in the integration's reconfigure/options screen, so you don't have to build them by hand. You can also rotate the secret from there if a URL ever leaks. 🔐
+Both the local and external URL (if configured in Home Assistant) are shown in the integration's reconfigure/options screen, so you don't have to build them by hand. You can also rotate the secret from there if a URL ever leaks — clear the secret key field and submit to generate a fresh key and immediately refresh the displayed URLs. 🔐
 
 ## ⏳ How much history and future do I get?
 
@@ -100,7 +100,7 @@ You can filter and sanitize exported events per feed without affecting the under
   - `feed_name`: change the displayed name without changing the URL. Also updates the integration entry's title in Home Assistant.
   - `selection_mode` / `calendar_entity_ids`: change the selection without changing the URL.
   - `history_weeks` / `future_weeks`: change the exported time window without changing the URL.
-  - `secret`: optional new secret (min. 20 ASCII letters/digits/underscores/hyphens). Leave blank to keep the current one.
+  - `secret`: secret key (min. 20 ASCII letters/digits/underscores/hyphens). Leave untouched to keep the current one, or clear it and submit to auto-generate a new secret and reload the options view with the updated URL.
 - **Options**
   - Same as reconfigure, plus viewing the current feed URLs — all without leaving the integration page.
 

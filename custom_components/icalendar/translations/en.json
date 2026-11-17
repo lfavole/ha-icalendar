@@ -69,9 +69,9 @@
       },
       "reconfigure": {
         "title": "Reconfigure iCalendar feed",
-        "description": "{url_block}\n\nLeave secret key empty to keep the existing one. Include exports only the selected calendars. Exclude exports all calendars except those selected; leave the list empty to export all calendars.",
+        "description": "{url_block}\n\nLeave the current secret key untouched to keep it, or clear it and submit to generate a new secret key and refresh the feed URLs above. Include exports only the selected calendars. Exclude exports all calendars except those selected; leave the list empty to export all calendars.",
         "data": {
-          "secret": "New secret key (optional; minimum 20 chars)",
+          "secret": "Secret key (clear to regenerate; minimum 20 chars)",
           "feed_name": "Feed name (optional)",
           "selection_mode": "Selection mode",
           "calendar_entity_ids": "Calendars",
@@ -136,9 +136,9 @@
     "step": {
       "init": {
         "title": "iCalendar feed settings",
-        "description": "{url_block}\n\nLeave secret key empty to keep the existing one. Include exports only the selected calendars. Exclude exports all calendars except those selected; leave the list empty to export all calendars.",
+        "description": "{url_block}\n\nLeave the current secret key untouched to keep it, or clear it and submit to generate a new secret key and refresh the feed URLs above. Include exports only the selected calendars. Exclude exports all calendars except those selected; leave the list empty to export all calendars.",
         "data": {
-          "secret": "New secret key (optional; minimum 20 chars)",
+          "secret": "Secret key (clear to regenerate; minimum 20 chars)",
           "feed_name": "Feed name (optional)",
           "selection_mode": "Selection mode",
           "calendar_entity_ids": "Calendars",

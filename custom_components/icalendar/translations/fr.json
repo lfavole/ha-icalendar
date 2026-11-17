@@ -69,9 +69,9 @@
       },
       "reconfigure": {
         "title": "Reconfigurer le flux iCalendar",
-        "description": "{url_block}\n\nLaissez la clé secrète vide pour conserver l'actuelle. Le mode Inclure n'exporte que les calendriers sélectionnés. Le mode Exclure exporte tous les calendriers sauf ceux sélectionnés ; laissez la liste vide pour tous les exporter.",
+        "description": "{url_block}\n\nLaissez la clé secrète actuelle inchangée pour la conserver, ou effacez-la puis validez pour générer une nouvelle clé secrète et actualiser les URL ci-dessus. Le mode Inclure n'exporte que les calendriers sélectionnés. Le mode Exclure exporte tous les calendriers sauf ceux sélectionnés ; laissez la liste vide pour tous les exporter.",
         "data": {
-          "secret": "Nouvelle clé secrète (facultatif ; minimum 20 caractères)",
+          "secret": "Clé secrète (effacer pour régénérer ; minimum 20 caractères)",
           "feed_name": "Nom du flux (facultatif)",
           "selection_mode": "Mode de sélection",
           "calendar_entity_ids": "Calendriers",
@@ -136,9 +136,9 @@
     "step": {
       "init": {
         "title": "Paramètres du flux iCalendar",
-        "description": "{url_block}\n\nLaissez la clé secrète vide pour conserver l'actuelle. Le mode Inclure n'exporte que les calendriers sélectionnés. Le mode Exclure exporte tous les calendriers sauf ceux sélectionnés ; laissez la liste vide pour tous les exporter.",
+        "description": "{url_block}\n\nLaissez la clé secrète actuelle inchangée pour la conserver, ou effacez-la puis validez pour générer une nouvelle clé secrète et actualiser les URL ci-dessus. Le mode Inclure n'exporte que les calendriers sélectionnés. Le mode Exclure exporte tous les calendriers sauf ceux sélectionnés ; laissez la liste vide pour tous les exporter.",
         "data": {
-          "secret": "Nouvelle clé secrète (facultatif ; minimum 20 caractères)",
+          "secret": "Clé secrète (effacer pour régénérer ; minimum 20 caractères)",
           "feed_name": "Nom du flux (facultatif)",
           "selection_mode": "Mode de sélection",
           "calendar_entity_ids": "Calendriers",

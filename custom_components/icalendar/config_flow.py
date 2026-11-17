@@ -279,6 +279,7 @@ class ICalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             new_secret = user_input.get(CONF_SECRET)
+            secret_cleared = CONF_SECRET in user_input and (new_secret is None or new_secret == "")
             if new_secret and not _is_secret_valid(new_secret):
                 return self.async_show_form(
                     step_id="reconfigure",
@@ -289,9 +290,10 @@ class ICalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+            final_secret = _generate_secret() if secret_cleared else (new_secret or existing_secret)
             updated_data = _normalized_entry_data(
                 user_input,
-                secret=new_secret or existing_secret,
+                secret=final_secret,
                 base_data=entry.data,
             )
             for existing_entry in self._async_current_entries():
@@ -307,6 +309,17 @@ class ICalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=updated_data,
             )
             await self.hass.config_entries.async_reload(entry.entry_id)
+            if secret_cleared:
+                new_local_url, new_external_url = _build_feed_urls(
+                    self.hass, entry.entry_id, final_secret
+                )
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=_build_reconfigure_schema(entry, updated_data),
+                    description_placeholders={
+                        "url_block": _build_urls_text(new_local_url, new_external_url),
+                    },
+                )
             return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
@@ -339,12 +352,14 @@ class ICalendarOptionsFlow(config_entries.OptionsFlow):
             custom_name = feed_name(user_input)
             errors = _selection_errors(self.hass, user_input)
             new_secret = user_input.get(CONF_SECRET)
+            secret_cleared = CONF_SECRET in user_input and (new_secret is None or new_secret == "")
             if new_secret and not _is_secret_valid(new_secret):
                 errors[CONF_SECRET] = "invalid_secret"
 
+            final_secret = _generate_secret() if secret_cleared else (new_secret or existing_secret)
             updated_data = _normalized_entry_data(
                 user_input,
-                secret=new_secret or existing_secret,
+                secret=final_secret,
                 base_data=self.config_entry.data,
             )
             if not errors:
@@ -370,6 +385,17 @@ class ICalendarOptionsFlow(config_entries.OptionsFlow):
                 data=updated_data,
             )
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            if secret_cleared:
+                new_local_url, new_external_url = _build_feed_urls(
+                    self.hass, self.config_entry.entry_id, final_secret
+                )
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=_build_options_schema(self.config_entry, updated_data),
+                    description_placeholders={
+                        "url_block": _build_urls_text(new_local_url, new_external_url),
+                    },
+                )
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(

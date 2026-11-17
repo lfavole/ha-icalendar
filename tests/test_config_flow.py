@@ -47,7 +47,7 @@ def test_settings_shows_legacy_selection_and_url(settings):
 
 
 @pytest.mark.parametrize('mode,entities,secret', [
-    ('include', ['calendar.changed'], ''),
+    ('include', ['calendar.changed'], 'a' * 24),
     ('exclude', [], 'b' * 24),
 ])
 def test_settings_saves_selection_and_reloads(settings, mode, entities, secret):
@@ -259,3 +259,19 @@ def test_default_alarm_settings_and_validation(settings):
     assert saved['all_day_alarm_days_before'] == 1
     assert saved['all_day_alarm_time'] == '09:00'
     assert saved['strip_description'] is True
+
+
+def test_clearing_secret_regenerates_key_and_reopens_options(settings):
+    result = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include',
+        'calendar_entity_ids': ['calendar.changed'],
+        'secret': '',
+    }))
+    assert result['step_id'] == 'init'
+    saved = settings.hass.config_entries.async_update_entry.call_args.kwargs['data']
+    new_secret = saved['secret']
+    assert new_secret != 'a' * 24
+    assert len(new_secret) >= 20
+    assert defaults(result)['secret'] == new_secret
+    assert f'https://ha.local/api/ics/feed/{new_secret}.ics' in result['description_placeholders']['url_block']
+    settings.hass.config_entries.async_reload.assert_awaited_once_with('feed')
