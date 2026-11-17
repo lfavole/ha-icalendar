@@ -140,3 +140,37 @@ def test_refresh_interval_headers_injected_when_positive():
     omitted = build_icalendar(SimpleNamespace(), None, 'Test', [event()], refresh_interval=0)
     assert 'REFRESH-INTERVAL' not in omitted
     assert 'X-PUBLISHED-TTL' not in omitted
+
+
+def test_default_alarms_for_timed_and_all_day_events():
+    timed = event()
+    all_day = {'start': '2026-09-12', 'end': '2026-09-13', 'summary': 'Trash Day'}
+    output = build_icalendar(
+        SimpleNamespace(),
+        None,
+        'Test',
+        [timed, all_day],
+        timed_alarm_minutes=15,
+        all_day_alarm_days_before=1,
+        all_day_alarm_time='09:00',
+    )
+    assert output.count('BEGIN:VALARM\r\n') == 2
+    assert 'TRIGGER:-PT15M\r\n' in output
+    assert 'TRIGGER:-PT15H\r\n' in output
+    parsed = IcsCalendarStream.calendar_from_ics(output)
+    assert len(parsed.events[0].alarms) == 1
+    assert len(parsed.events[1].alarms) == 1
+
+
+def test_same_day_and_at_start_alarm_triggers():
+    from custom_components.icalendar.ical import all_day_alarm_trigger, timed_alarm_trigger
+
+    assert timed_alarm_trigger(-1) is None
+    assert timed_alarm_trigger(0) == 'PT0S'
+    assert timed_alarm_trigger(90) == '-PT1H30M'
+    assert all_day_alarm_trigger(-1, '09:00') is None
+    assert all_day_alarm_trigger(0, '09:00') == 'PT9H'
+    assert all_day_alarm_trigger(0, '00:00') == 'PT0S'
+    assert all_day_alarm_trigger(1, '09:00') == '-PT15H'
+    assert all_day_alarm_trigger(1, '00:00') == '-P1D'
+    assert all_day_alarm_trigger(2, '09:00') == '-P1DT15H'

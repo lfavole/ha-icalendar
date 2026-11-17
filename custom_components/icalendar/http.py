@@ -146,6 +146,9 @@ class ICalendarView(HomeAssistantView):
             resolved_name,
             events,
             refresh_interval=runtime_data.refresh_interval,
+            timed_alarm_minutes=runtime_data.timed_alarm_minutes,
+            all_day_alarm_days_before=runtime_data.all_day_alarm_days_before,
+            all_day_alarm_time=runtime_data.all_day_alarm_time,
         )
         etag = f'"{hashlib.sha256(feed.encode("utf-8")).hexdigest()[:32]}"'
         headers = {

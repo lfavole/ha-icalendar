@@ -19,7 +19,10 @@
       "invalid_regex": "Syntaxe d'expression régulière invalide.",
       "invalid_filter_fields": "Sélectionnez au moins un champ d'événement valide à analyser.",
       "invalid_event_type": "Choisissez tous les événements, uniquement les événements planifiés ou uniquement les journées entières.",
-      "invalid_refresh_interval": "L'intervalle d'actualisation doit être compris entre 0 et 10080 minutes."
+      "invalid_refresh_interval": "L'intervalle d'actualisation doit être compris entre 0 et 10080 minutes.",
+      "invalid_timed_alarm": "L'alarme des événements avec horaire doit être -1 (désactivée) ou comprise entre 0 et 40320 minutes.",
+      "invalid_all_day_alarm_days": "Le nombre de jours avant pour les journées entières doit être -1 (désactivée) ou compris entre 0 et 30 jours.",
+      "invalid_all_day_alarm_time": "L'heure de l'alarme journée entière doit être au format 24h HH:MM (par ex. 09:00)."
     },
     "step": {
       "user": {
@@ -40,7 +43,10 @@
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
           "future_weeks": "Événements futurs (semaines)",
-          "refresh_interval": "Fréquence d'actualisation client (minutes)"
+          "refresh_interval": "Fréquence d'actualisation client (minutes)",
+          "timed_alarm_minutes": "Alarme par défaut pour événements avec horaire (minutes avant)",
+          "all_day_alarm_days_before": "Alarme par défaut pour journées entières (jours avant)",
+          "all_day_alarm_time": "Heure de l'alarme journée entière (HH:MM)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
@@ -55,7 +61,10 @@
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
           "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
-          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête.",
+          "timed_alarm_minutes": "Ajoute un rappel VALARM avant les événements avec horaire (0 = au début de l'événement, -1 = désactivée).",
+          "all_day_alarm_days_before": "Ajoute un rappel VALARM pour les événements journée entière ce nombre de jours avant (0 = le jour même, -1 = désactivée).",
+          "all_day_alarm_time": "Heure de la journée (format 24h HH:MM) à laquelle l'alarme journée entière se déclenche."
         }
       },
       "reconfigure": {
@@ -77,7 +86,10 @@
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
           "future_weeks": "Événements futurs (semaines)",
-          "refresh_interval": "Fréquence d'actualisation client (minutes)"
+          "refresh_interval": "Fréquence d'actualisation client (minutes)",
+          "timed_alarm_minutes": "Alarme par défaut pour événements avec horaire (minutes avant)",
+          "all_day_alarm_days_before": "Alarme par défaut pour journées entières (jours avant)",
+          "all_day_alarm_time": "Heure de l'alarme journée entière (HH:MM)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
@@ -92,7 +104,10 @@
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
           "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
-          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête.",
+          "timed_alarm_minutes": "Ajoute un rappel VALARM avant les événements avec horaire (0 = au début de l'événement, -1 = désactivée).",
+          "all_day_alarm_days_before": "Ajoute un rappel VALARM pour les événements journée entière ce nombre de jours avant (0 = le jour même, -1 = désactivée).",
+          "all_day_alarm_time": "Heure de la journée (format 24h HH:MM) à laquelle l'alarme journée entière se déclenche."
         }
       }
     }
@@ -113,7 +128,10 @@
       "invalid_filter_fields": "Sélectionnez au moins un champ d'événement valide à analyser.",
       "invalid_event_type": "Choisissez tous les événements, uniquement les événements planifiés ou uniquement les journées entières.",
       "invalid_refresh_interval": "L'intervalle d'actualisation doit être compris entre 0 et 10080 minutes.",
-      "already_configured": "Cette sélection de calendriers et de filtres est déjà configurée."
+      "already_configured": "Cette sélection de calendriers et de filtres est déjà configurée.",
+      "invalid_timed_alarm": "L'alarme des événements avec horaire doit être -1 (désactivée) ou comprise entre 0 et 40320 minutes.",
+      "invalid_all_day_alarm_days": "Le nombre de jours avant pour les journées entières doit être -1 (désactivée) ou compris entre 0 et 30 jours.",
+      "invalid_all_day_alarm_time": "L'heure de l'alarme journée entière doit être au format 24h HH:MM (par ex. 09:00)."
     },
     "step": {
       "init": {
@@ -135,7 +153,10 @@
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
           "future_weeks": "Événements futurs (semaines)",
-          "refresh_interval": "Fréquence d'actualisation client (minutes)"
+          "refresh_interval": "Fréquence d'actualisation client (minutes)",
+          "timed_alarm_minutes": "Alarme par défaut pour événements avec horaire (minutes avant)",
+          "all_day_alarm_days_before": "Alarme par défaut pour journées entières (jours avant)",
+          "all_day_alarm_time": "Heure de l'alarme journée entière (HH:MM)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
@@ -150,7 +171,10 @@
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
           "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
-          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête.",
+          "timed_alarm_minutes": "Ajoute un rappel VALARM avant les événements avec horaire (0 = au début de l'événement, -1 = désactivée).",
+          "all_day_alarm_days_before": "Ajoute un rappel VALARM pour les événements journée entière ce nombre de jours avant (0 = le jour même, -1 = désactivée).",
+          "all_day_alarm_time": "Heure de la journée (format 24h HH:MM) à laquelle l'alarme journée entière se déclenche."
         }
       }
     }

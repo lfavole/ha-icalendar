@@ -78,7 +78,8 @@ You can filter and sanitize exported events per feed without affecting the under
 - **Regex filter mode** (`none`, `include`, `exclude`): Keep only matching events or drop matching events using a Python regular expression.
 - **Fields to match**: Match against `summary`, `description`, and/or `location` (case-insensitive by default, with an optional case-sensitive toggle).
 - **Event type filter** (`all`, `timed`, `all_day`): Export only timed appointments or only all-day events.
-- **Privacy stripping**: Independently strip `DESCRIPTION` and/or `LOCATION` (which also skips address geocoding) when sharing feeds externally.
+- **Privacy stripping**: Independently remove event `DESCRIPTION` (`strip_description`) and/or `LOCATION` (`strip_location`, which also skips address geocoding) when sharing feeds externally.
+- **Default alarms (`VALARM`)**: Inject separate default `DISPLAY` reminders for timed events (`timed_alarm_minutes`, `-1` disabled, `0` at start) and all-day events (`all_day_alarm_days_before` + `all_day_alarm_time`, e.g. 1 day before at `09:00`).
 - **Calendar name prefixing**: Optionally prepend `[Calendar Name]` to each event summary in combined feeds.
 - **Multiple filtered views**: Create multiple feeds from the same calendar(s) as long as their filter or privacy settings differ.
 

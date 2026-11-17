@@ -41,7 +41,7 @@ def test_settings_shows_legacy_selection_and_url(settings):
     assert defaults(result) == {
         'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
         'secret': 'a' * 24, 'geocoding_url': '', 'history_weeks': 4, 'future_weeks': 52,
-        'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
+        'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'timed_alarm_minutes': -1, 'all_day_alarm_days_before': -1, 'all_day_alarm_time': '09:00', 'refresh_interval': 60,
     }
     assert 'https://ha.local/api/ics/feed/' in result['description_placeholders']['url_block']
 
@@ -59,7 +59,7 @@ def test_settings_saves_selection_and_reloads(settings, mode, entities, secret):
     assert saved['data'] == {
         'selection_mode': mode, 'calendar_entity_ids': entities,
         'secret': secret or 'a' * 24, 'geocoding_url': '',
-        'history_weeks': 4, 'future_weeks': 52, 'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
+        'history_weeks': 4, 'future_weeks': 52, 'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'timed_alarm_minutes': -1, 'all_day_alarm_days_before': -1, 'all_day_alarm_time': '09:00', 'refresh_interval': 60,
     }
     assert mode in saved['title']
     settings.hass.config_entries.async_reload.assert_awaited_once_with('feed')
@@ -111,7 +111,7 @@ def test_invalid_settings_preserve_input_without_saving(settings, mode, entities
     assert error in result['errors'].values()
     assert defaults(result) == {
         **data, 'geocoding_url': '', 'history_weeks': 4, 'future_weeks': 52, 'feed_name': '',
-        'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
+        'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'timed_alarm_minutes': -1, 'all_day_alarm_days_before': -1, 'all_day_alarm_time': '09:00', 'refresh_interval': 60,
     }
     settings.hass.config_entries.async_update_entry.assert_not_called()
     settings.hass.config_entries.async_reload.assert_not_awaited()
@@ -225,3 +225,37 @@ def test_same_calendars_allowed_when_filter_differs(settings):
         'filter_mode': 'exclude', 'filter_regex': '^Private',
     }))
     assert result['type'] == 'create_entry'
+
+
+def test_default_alarm_settings_and_validation(settings):
+    bad_timed = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'timed_alarm_minutes': -2,
+    }))
+    assert bad_timed['errors'] == {'timed_alarm_minutes': 'invalid_timed_alarm'}
+
+    bad_days = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'all_day_alarm_days_before': 31,
+    }))
+    assert bad_days['errors'] == {'all_day_alarm_days_before': 'invalid_all_day_alarm_days'}
+
+    bad_time = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'all_day_alarm_days_before': 1, 'all_day_alarm_time': '25:99',
+    }))
+    assert bad_time['errors'] == {'all_day_alarm_time': 'invalid_all_day_alarm_time'}
+
+    valid = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'timed_alarm_minutes': 15,
+        'all_day_alarm_days_before': 1,
+        'all_day_alarm_time': '09:00',
+        'strip_description': True,
+    }))
+    assert valid['type'] == 'create_entry'
+    saved = settings.hass.config_entries.async_update_entry.call_args.kwargs['data']
+    assert saved['timed_alarm_minutes'] == 15
+    assert saved['all_day_alarm_days_before'] == 1
+    assert saved['all_day_alarm_time'] == '09:00'
+    assert saved['strip_description'] is True

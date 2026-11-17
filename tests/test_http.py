@@ -288,3 +288,40 @@ def test_etag_returns_304_when_unchanged():
     second = asyncio.run(view.get(req, 'entry', 'a' * 24))
     assert second.status == 304
     assert second.headers['ETag'] == etag
+
+
+def test_http_applies_separate_default_alarms_and_strips_description():
+    from ical.calendar_stream import IcsCalendarStream
+
+    hass, entry, view = fixture()
+    entry.runtime_data.calendar_entity_ids = ['calendar.a']
+    entry.runtime_data.strip_description = True
+    entry.runtime_data.timed_alarm_minutes = 10
+    entry.runtime_data.all_day_alarm_days_before = 0
+    entry.runtime_data.all_day_alarm_time = '08:30'
+    hass.states = SimpleNamespace(get=lambda _: SimpleNamespace(name='Personal'))
+    hass.registry = SimpleNamespace(async_get=lambda _: None)
+    view._fetch_events = AsyncMock(return_value=[
+        {
+            'start': '2026-09-10T14:00:00Z',
+            'end': '2026-09-10T15:00:00Z',
+            'summary': 'Dentist',
+            'description': 'Private medical note',
+        },
+        {
+            'start': '2026-09-11',
+            'end': '2026-09-12',
+            'summary': 'Holiday',
+            'description': 'Private holiday note',
+        },
+    ])
+    response = asyncio.run(view.get(None, 'entry', 'a' * 24))
+    assert response.status == 200
+    assert 'Private medical note' not in response.text
+    assert 'Private holiday note' not in response.text
+    assert 'TRIGGER:-PT10M\r\n' in response.text
+    assert 'TRIGGER:PT8H30M\r\n' in response.text
+    parsed = IcsCalendarStream.calendar_from_ics(response.text)
+    assert all(ev.description is None for ev in parsed.events)
+    assert len(parsed.events[0].alarms) == 1
+    assert len(parsed.events[1].alarms) == 1

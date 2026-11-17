@@ -19,6 +19,7 @@ from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .const import DEFAULT_ALL_DAY_ALARM_TIME
 from .location import coordinates
 
 
@@ -28,6 +29,9 @@ def build_icalendar(
     calendar_name: str,
     events: list[dict[str, Any]],
     refresh_interval: int = 0,
+    timed_alarm_minutes: int = -1,
+    all_day_alarm_days_before: int = -1,
+    all_day_alarm_time: str = DEFAULT_ALL_DAY_ALARM_TIME,
 ) -> str:
     """Build iCalendar feed output using HA's shared ical library."""
     calendar = Calendar()
@@ -45,6 +49,9 @@ def build_icalendar(
         calendar_name=calendar_name,
         calendar_color=resolve_calendar_color(hass, entity_id),
         refresh_interval=refresh_interval,
+        timed_alarm_minutes=timed_alarm_minutes,
+        all_day_alarm_days_before=all_day_alarm_days_before,
+        all_day_alarm_time=all_day_alarm_time,
     )
 
 
@@ -71,24 +78,98 @@ def fold_line(line: str) -> str:
     return "\r\n".join(lines)
 
 
+def format_ical_duration(total_minutes: int) -> str:
+    """Format a signed minute offset as an RFC 5545 DURATION value."""
+    if total_minutes == 0:
+        return "PT0S"
+    sign = "-" if total_minutes < 0 else ""
+    remaining = abs(total_minutes)
+    days, rem = divmod(remaining, 1440)
+    hours, minutes = divmod(rem, 60)
+    date_part = f"{days}D" if days else ""
+    time_parts = "".join(
+        part for part in (f"{hours}H" if hours else "", f"{minutes}M" if minutes else "") if part
+    )
+    time_part = f"T{time_parts}" if time_parts else ""
+    return f"{sign}P{date_part}{time_part}"
+
+
+def timed_alarm_trigger(minutes_before: int) -> str | None:
+    """Return an RFC 5545 TRIGGER duration for timed events, or None when disabled."""
+    if minutes_before < 0:
+        return None
+    return format_ical_duration(-minutes_before)
+
+
+def all_day_alarm_trigger(days_before: int, alarm_time: str) -> str | None:
+    """Return an RFC 5545 TRIGGER duration for all-day events, or None when disabled."""
+    if days_before < 0:
+        return None
+    match = re.fullmatch(r"([01]\d|2[0-3]):([0-5]\d)", (alarm_time or "").strip())
+    if not match:
+        return None
+    hh, mm = int(match.group(1)), int(match.group(2))
+    offset_minutes = (hh * 60 + mm) - (days_before * 1440)
+    return format_ical_duration(offset_minutes)
+
+
 def inject_calendar_metadata(
     ics: str,
     calendar_name: str,
     calendar_color: str | None,
     refresh_interval: int = 0,
+    timed_alarm_minutes: int = -1,
+    all_day_alarm_days_before: int = -1,
+    all_day_alarm_time: str = DEFAULT_ALL_DAY_ALARM_TIME,
 ) -> str:
-    """Inject NAME/X-WR-CALNAME/COLOR/REFRESH-INTERVAL in VCALENDAR headers."""
+    """Inject calendar headers and optional default VALARM blocks."""
     # The pinned serializer folds by characters and omits DATE parameters.
     # Unfold before applying the wire-format constraints ourselves.
     unfolded = re.sub(r"\n[ \t]", "", ics.replace("\r\n", "\n"))
     lines = unfolded.split("\n")
     injected: list[str] = []
     inserted = False
+    timed_trigger = timed_alarm_trigger(timed_alarm_minutes)
+    all_day_trigger = all_day_alarm_trigger(all_day_alarm_days_before, all_day_alarm_time)
+
+    in_event = False
+    in_alarm = False
+    is_all_day = False
+    has_valarm = False
+    event_summary = ""
+
     for line in lines:
         if not line:
             continue
         line = re.sub(r"^(DTSTART|DTEND):([0-9]{8})$",
                       r"\1;VALUE=DATE:\2", line)
+        if line == "BEGIN:VEVENT":
+            in_event = True
+            in_alarm = False
+            is_all_day = False
+            has_valarm = False
+            event_summary = ""
+        elif in_event and line == "BEGIN:VALARM":
+            in_alarm = True
+            has_valarm = True
+        elif in_alarm and line == "END:VALARM":
+            in_alarm = False
+        elif in_event and not in_alarm:
+            if line.startswith("DTSTART;VALUE=DATE:"):
+                is_all_day = True
+            elif line.startswith("SUMMARY:"):
+                event_summary = line[len("SUMMARY:"):]
+        if in_event and line == "END:VEVENT":
+            if not has_valarm:
+                trigger = all_day_trigger if is_all_day else timed_trigger
+                if trigger is not None:
+                    injected.append("BEGIN:VALARM")
+                    injected.append("ACTION:DISPLAY")
+                    injected.append(fold_line(f"DESCRIPTION:{event_summary or 'Reminder'}"))
+                    injected.append(f"TRIGGER:{trigger}")
+                    injected.append("END:VALARM")
+            in_event = False
+
         injected.append(fold_line(line))
         if not inserted and line == "VERSION:2.0":
             injected.append(fold_line(f"NAME:{escape_text(calendar_name)}"))

@@ -19,7 +19,10 @@
       "invalid_regex": "Invalid regular expression syntax.",
       "invalid_filter_fields": "Select at least one valid event field to match.",
       "invalid_event_type": "Choose all events, timed events only, or all-day events only.",
-      "invalid_refresh_interval": "Refresh interval must be between 0 and 10080 minutes."
+      "invalid_refresh_interval": "Refresh interval must be between 0 and 10080 minutes.",
+      "invalid_timed_alarm": "Timed event alarm must be -1 (disabled) or between 0 and 40320 minutes.",
+      "invalid_all_day_alarm_days": "All-day alarm days before must be -1 (disabled) or between 0 and 30 days.",
+      "invalid_all_day_alarm_time": "All-day alarm time must use 24-hour HH:MM format (e.g. 09:00)."
     },
     "step": {
       "user": {
@@ -40,7 +43,10 @@
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
           "future_weeks": "Future events (weeks)",
-          "refresh_interval": "Client refresh hint (minutes)"
+          "refresh_interval": "Client refresh hint (minutes)",
+          "timed_alarm_minutes": "Default alarm for timed events (minutes before)",
+          "all_day_alarm_days_before": "Default alarm for all-day events (days before)",
+          "all_day_alarm_time": "All-day event alarm time (HH:MM)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
@@ -55,7 +61,10 @@
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
           "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
-          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header.",
+          "timed_alarm_minutes": "Add a default VALARM reminder before timed events (0 = at event start, -1 = disabled).",
+          "all_day_alarm_days_before": "Add a default VALARM reminder for all-day events this many days before (0 = on the event day, -1 = disabled).",
+          "all_day_alarm_time": "Time of day (24-hour HH:MM) when the all-day event alarm fires."
         }
       },
       "reconfigure": {
@@ -77,7 +86,10 @@
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
           "future_weeks": "Future events (weeks)",
-          "refresh_interval": "Client refresh hint (minutes)"
+          "refresh_interval": "Client refresh hint (minutes)",
+          "timed_alarm_minutes": "Default alarm for timed events (minutes before)",
+          "all_day_alarm_days_before": "Default alarm for all-day events (days before)",
+          "all_day_alarm_time": "All-day event alarm time (HH:MM)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
@@ -92,7 +104,10 @@
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
           "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
-          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header.",
+          "timed_alarm_minutes": "Add a default VALARM reminder before timed events (0 = at event start, -1 = disabled).",
+          "all_day_alarm_days_before": "Add a default VALARM reminder for all-day events this many days before (0 = on the event day, -1 = disabled).",
+          "all_day_alarm_time": "Time of day (24-hour HH:MM) when the all-day event alarm fires."
         }
       }
     }
@@ -113,7 +128,10 @@
       "invalid_filter_fields": "Select at least one valid event field to match.",
       "invalid_event_type": "Choose all events, timed events only, or all-day events only.",
       "invalid_refresh_interval": "Refresh interval must be between 0 and 10080 minutes.",
-      "already_configured": "This calendar selection and filter configuration is already configured."
+      "already_configured": "This calendar selection and filter configuration is already configured.",
+      "invalid_timed_alarm": "Timed event alarm must be -1 (disabled) or between 0 and 40320 minutes.",
+      "invalid_all_day_alarm_days": "All-day alarm days before must be -1 (disabled) or between 0 and 30 days.",
+      "invalid_all_day_alarm_time": "All-day alarm time must use 24-hour HH:MM format (e.g. 09:00)."
     },
     "step": {
       "init": {
@@ -135,7 +153,10 @@
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
           "future_weeks": "Future events (weeks)",
-          "refresh_interval": "Client refresh hint (minutes)"
+          "refresh_interval": "Client refresh hint (minutes)",
+          "timed_alarm_minutes": "Default alarm for timed events (minutes before)",
+          "all_day_alarm_days_before": "Default alarm for all-day events (days before)",
+          "all_day_alarm_time": "All-day event alarm time (HH:MM)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
@@ -150,7 +171,10 @@
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
           "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
-          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header.",
+          "timed_alarm_minutes": "Add a default VALARM reminder before timed events (0 = at event start, -1 = disabled).",
+          "all_day_alarm_days_before": "Add a default VALARM reminder for all-day events this many days before (0 = on the event day, -1 = disabled).",
+          "all_day_alarm_time": "Time of day (24-hour HH:MM) when the all-day event alarm fires."
         }
       }
     }

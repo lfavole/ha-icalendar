@@ -17,6 +17,7 @@ from .http import ICalendarView
 from .location import CONF_GEOCODING_URL, LocationResolver
 from .models import (
     ICalendarRuntimeData,
+    alarm_settings,
     calendar_range,
     calendar_selection,
     feed_name,
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data
     )
     strip_description, strip_location, prefix_calendar_name = privacy_settings(entry.data)
+    timed_alarm, all_day_days, all_day_time = alarm_settings(entry.data)
     interval = refresh_interval(entry.data)
 
     compiled_pattern = None
@@ -78,6 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         strip_description=strip_description,
         strip_location=strip_location,
         prefix_calendar_name=prefix_calendar_name,
+        timed_alarm_minutes=timed_alarm,
+        all_day_alarm_days_before=all_day_days,
+        all_day_alarm_time=all_day_time,
         refresh_interval=interval,
         compiled_pattern=compiled_pattern,
         cache=cached or {},

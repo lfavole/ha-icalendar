@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_SECRET, MODE_EXCLUDE
 from .models import (
+    alarm_settings,
     calendar_selection,
     filter_settings,
     privacy_settings,
@@ -48,6 +49,7 @@ async def async_get_config_entry_diagnostics(
         entry.data
     )
     strip_description, strip_location, prefix_calendar_name = privacy_settings(entry.data)
+    timed_alarm, all_day_days, all_day_time = alarm_settings(entry.data)
     runtime_data = getattr(entry, "runtime_data", None)
     cache_summary = (
         {
@@ -74,6 +76,11 @@ async def async_get_config_entry_diagnostics(
             "strip_description": strip_description,
             "strip_location": strip_location,
             "prefix_calendar_name": prefix_calendar_name,
+        },
+        "alarms": {
+            "timed_alarm_minutes": timed_alarm,
+            "all_day_alarm_days_before": all_day_days,
+            "all_day_alarm_time": all_day_time,
         },
         "refresh_interval_minutes": refresh_interval(entry.data),
         "cached_event_counts": cache_summary,

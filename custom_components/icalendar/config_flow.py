@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_ALL_DAY_ALARM_DAYS_BEFORE,
+    CONF_ALL_DAY_ALARM_TIME,
     CONF_CALENDAR_ENTITY_ID,
     CONF_CALENDAR_ENTITY_IDS,
     CONF_EVENT_TYPE_FILTER,
@@ -32,8 +34,11 @@ from .const import (
     CONF_SELECTION_MODE,
     CONF_STRIP_DESCRIPTION,
     CONF_STRIP_LOCATION,
+    CONF_TIMED_ALARM_MINUTES,
     DOMAIN,
     FILTER_MODE_NONE,
+    MAX_ALARM_MINUTES,
+    MAX_ALL_DAY_ALARM_DAYS_BEFORE,
     MAX_FEED_NAME_LENGTH,
     MAX_FUTURE_WEEKS,
     MAX_HISTORY_WEEKS,
@@ -49,6 +54,7 @@ from .const import (
 from .filters import validate_filter_regex
 from .location import CONF_GEOCODING_URL, is_valid_geocoding_url
 from .models import (
+    alarm_settings,
     calendar_range,
     calendar_selection,
     feed_name,
@@ -138,6 +144,19 @@ def _selection_errors(hass: HomeAssistant, data: Mapping[str, Any]) -> dict[str,
         return {CONF_REFRESH_INTERVAL: "invalid_refresh_interval"}
     if not (0 <= interval <= MAX_REFRESH_INTERVAL):
         return {CONF_REFRESH_INTERVAL: "invalid_refresh_interval"}
+
+    try:
+        timed_alarm, all_day_days, all_day_time = alarm_settings(data)
+    except (TypeError, ValueError):
+        return {CONF_TIMED_ALARM_MINUTES: "invalid_timed_alarm"}
+    if not (-1 <= timed_alarm <= MAX_ALARM_MINUTES):
+        return {CONF_TIMED_ALARM_MINUTES: "invalid_timed_alarm"}
+    if not (-1 <= all_day_days <= MAX_ALL_DAY_ALARM_DAYS_BEFORE):
+        return {CONF_ALL_DAY_ALARM_DAYS_BEFORE: "invalid_all_day_alarm_days"}
+    if (all_day_days >= 0 or all_day_time) and not re.fullmatch(
+        r"([01]\d|2[0-3]):[0-5]\d", all_day_time
+    ):
+        return {CONF_ALL_DAY_ALARM_TIME: "invalid_all_day_alarm_time"}
     return {}
 
 
@@ -156,6 +175,7 @@ def _same_feed_config(existing_data: Mapping[str, Any], candidate_data: Mapping[
         and existing_filter[3] == candidate_filter[3]
         and existing_filter[4] == candidate_filter[4]
         and privacy_settings(existing_data) == privacy_settings(candidate_data)
+        and alarm_settings(existing_data) == alarm_settings(candidate_data)
     )
 
 
@@ -173,6 +193,7 @@ def _normalized_entry_data(
         user_input
     )
     strip_description, strip_location, prefix_calendar_name = privacy_settings(user_input)
+    timed_alarm, all_day_days, all_day_time = alarm_settings(user_input)
     interval = refresh_interval(user_input)
 
     data = {
@@ -191,6 +212,9 @@ def _normalized_entry_data(
         CONF_STRIP_DESCRIPTION: strip_description,
         CONF_STRIP_LOCATION: strip_location,
         CONF_PREFIX_CALENDAR_NAME: prefix_calendar_name,
+        CONF_TIMED_ALARM_MINUTES: timed_alarm,
+        CONF_ALL_DAY_ALARM_DAYS_BEFORE: all_day_days,
+        CONF_ALL_DAY_ALARM_TIME: all_day_time,
         CONF_REFRESH_INTERVAL: interval,
         CONF_SECRET: secret,
     }
@@ -364,6 +388,7 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
     history_weeks, future_weeks = calendar_range(data)
     filter_mode, filter_regex, filter_fields, case_sensitive, event_type = filter_settings(data)
     strip_description, strip_location, prefix_calendar_name = privacy_settings(data)
+    timed_alarm, all_day_days, all_day_time = alarm_settings(data)
     interval = refresh_interval(data)
 
     return vol.Schema({
@@ -400,6 +425,19 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
         vol.Optional(CONF_STRIP_DESCRIPTION, default=strip_description): bool,
         vol.Optional(CONF_STRIP_LOCATION, default=strip_location): bool,
         vol.Optional(CONF_PREFIX_CALENDAR_NAME, default=prefix_calendar_name): bool,
+        vol.Optional(CONF_TIMED_ALARM_MINUTES, default=timed_alarm): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=-1, max=MAX_ALARM_MINUTES, step=1, mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="min",
+            )
+        ),
+        vol.Optional(CONF_ALL_DAY_ALARM_DAYS_BEFORE, default=all_day_days): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=-1, max=MAX_ALL_DAY_ALARM_DAYS_BEFORE, step=1,
+                mode=selector.NumberSelectorMode.BOX, unit_of_measurement="days",
+            )
+        ),
+        vol.Optional(CONF_ALL_DAY_ALARM_TIME, default=all_day_time): str,
         vol.Optional(CONF_GEOCODING_URL, default=data.get(CONF_GEOCODING_URL, "")): str,
         vol.Required(CONF_HISTORY_WEEKS, default=history_weeks): selector.NumberSelector(
             selector.NumberSelectorConfig(
