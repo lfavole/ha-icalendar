@@ -41,7 +41,7 @@ def test_settings_shows_legacy_selection_and_url(settings):
     assert defaults(result) == {
         'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
         'secret': 'a' * 24, 'geocoding_url': '', 'history_weeks': 4, 'future_weeks': 52,
-        'feed_name': '',
+        'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
     }
     assert 'https://ha.local/api/ics/feed/' in result['description_placeholders']['url_block']
 
@@ -59,7 +59,7 @@ def test_settings_saves_selection_and_reloads(settings, mode, entities, secret):
     assert saved['data'] == {
         'selection_mode': mode, 'calendar_entity_ids': entities,
         'secret': secret or 'a' * 24, 'geocoding_url': '',
-        'history_weeks': 4, 'future_weeks': 52, 'feed_name': '',
+        'history_weeks': 4, 'future_weeks': 52, 'feed_name': '', 'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
     }
     assert mode in saved['title']
     settings.hass.config_entries.async_reload.assert_awaited_once_with('feed')
@@ -111,6 +111,7 @@ def test_invalid_settings_preserve_input_without_saving(settings, mode, entities
     assert error in result['errors'].values()
     assert defaults(result) == {
         **data, 'geocoding_url': '', 'history_weeks': 4, 'future_weeks': 52, 'feed_name': '',
+        'filter_mode': 'none', 'filter_regex': '', 'filter_fields': ['summary'], 'filter_case_sensitive': False, 'event_type_filter': 'all', 'strip_description': False, 'strip_location': False, 'prefix_calendar_name': False, 'refresh_interval': 60,
     }
     settings.hass.config_entries.async_update_entry.assert_not_called()
     settings.hass.config_entries.async_reload.assert_not_awaited()
@@ -172,3 +173,55 @@ def test_invalid_geocoding_endpoint(settings, url):
     }))
     assert result['errors'] == {'geocoding_url': 'invalid_geocoding_url'}
     settings.hass.config_entries.async_update_entry.assert_not_called()
+
+
+def test_regex_filter_settings_and_validation(settings):
+    invalid = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'filter_mode': 'include', 'filter_regex': '[broken',
+    }))
+    assert invalid['errors'] == {'filter_regex': 'invalid_regex'}
+    settings.hass.config_entries.async_update_entry.assert_not_called()
+
+    missing_pattern = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'filter_mode': 'exclude', 'filter_regex': '',
+    }))
+    assert missing_pattern['errors'] == {'filter_regex': 'regex_required'}
+
+    valid = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'filter_mode': 'include', 'filter_regex': r'^Work:',
+        'filter_fields': ['summary', 'description'],
+        'filter_case_sensitive': True,
+        'event_type_filter': 'timed',
+        'strip_description': True,
+        'strip_location': True,
+        'prefix_calendar_name': True,
+        'refresh_interval': 30,
+    }))
+    assert valid['type'] == 'create_entry'
+    saved = settings.hass.config_entries.async_update_entry.call_args.kwargs['data']
+    assert saved['filter_mode'] == 'include'
+    assert saved['filter_regex'] == r'^Work:'
+    assert saved['filter_fields'] == ['summary', 'description']
+    assert saved['filter_case_sensitive'] is True
+    assert saved['event_type_filter'] == 'timed'
+    assert saved['strip_description'] is True
+    assert saved['strip_location'] is True
+    assert saved['prefix_calendar_name'] is True
+    assert saved['refresh_interval'] == 30
+
+
+def test_same_calendars_allowed_when_filter_differs(settings):
+    settings.hass.config_entries.async_entries.return_value.append(SimpleNamespace(
+        entry_id='other', data={
+            'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+            'filter_mode': 'include', 'filter_regex': '^Work',
+        },
+    ))
+    result = asyncio.run(settings.async_step_init({
+        'selection_mode': 'include', 'calendar_entity_ids': ['calendar.original'],
+        'filter_mode': 'exclude', 'filter_regex': '^Private',
+    }))
+    assert result['type'] == 'create_entry'

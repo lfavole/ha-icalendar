@@ -247,3 +247,44 @@ def test_disabled_geocoding_does_not_call_resolver():
     resolver = SimpleNamespace(resolve=AsyncMock())
     assert asyncio.run(ICalendarView(hass, resolver).get(None, 'entry', 'a' * 24)).status == 200
     resolver.resolve.assert_not_awaited()
+
+
+def test_regex_filter_and_strip_location_skip_geocoding():
+    from ical.calendar_stream import IcsCalendarStream
+
+    hass, entry, _ = fixture()
+    entry.runtime_data.calendar_entity_ids = ['calendar.a']
+    entry.runtime_data.filter_mode = 'exclude'
+    entry.runtime_data.filter_regex = r'^Private:'
+    entry.runtime_data.geocoding_url = 'https://geo.example/search'
+    entry.runtime_data.strip_description = True
+    hass.states = SimpleNamespace(get=lambda _: SimpleNamespace(name='Family'))
+    hass.registry = SimpleNamespace(async_get=lambda _: None)
+    resolver = SimpleNamespace(resolve=AsyncMock(return_value=(-43.53, 172.6)))
+    view = ICalendarView(hass, resolver)
+    view._fetch_events = AsyncMock(return_value=[
+        {'start': '2026-09-10', 'end': '2026-09-11', 'summary': 'Private: Secret', 'location': 'Secret St'},
+        {'start': '2026-09-11', 'end': '2026-09-12', 'summary': 'Public Event', 'description': 'Hidden note', 'location': 'Public Ave'},
+    ])
+    response = asyncio.run(view.get(None, 'entry', 'a' * 24))
+    assert response.status == 200
+    parsed = IcsCalendarStream.calendar_from_ics(response.text)
+    assert [event.summary for event in parsed.events] == ['Public Event']
+    assert parsed.events[0].description is None
+    # Excluded event was filtered before geocoding
+    resolver.resolve.assert_awaited_once_with('https://geo.example/search', 'Public Ave')
+    # Raw cache still retains both unfiltered events
+    assert len(entry.runtime_data.cache['calendar.a']['events']) == 2
+
+
+def test_etag_returns_304_when_unchanged():
+    hass, entry, view = fixture()
+    first = asyncio.run(view.get(None, 'entry', 'a' * 24))
+    assert first.status == 200
+    etag = first.headers['ETag']
+    assert first.headers['Content-Disposition'] == 'inline; filename="iCalendar-API.ics"'
+
+    req = SimpleNamespace(headers={'If-None-Match': etag})
+    second = asyncio.run(view.get(req, 'entry', 'a' * 24))
+    assert second.status == 304
+    assert second.headers['ETag'] == etag

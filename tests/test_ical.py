@@ -130,3 +130,13 @@ def test_bad_coordinates_keep_plain_location(point):
         event(location='199 Clarence Street, Riccarton', _location_coordinates=point)])
     assert 'X-APPLE-STRUCTURED-LOCATION' not in output
     assert IcsCalendarStream.calendar_from_ics(output).events[0].location == '199 Clarence Street, Riccarton'
+
+
+def test_refresh_interval_headers_injected_when_positive():
+    output = build_icalendar(SimpleNamespace(), None, 'Test', [event()], refresh_interval=30)
+    assert 'REFRESH-INTERVAL;VALUE=DURATION:PT30M\r\n' in output
+    assert 'X-PUBLISHED-TTL:PT30M\r\n' in output
+
+    omitted = build_icalendar(SimpleNamespace(), None, 'Test', [event()], refresh_interval=0)
+    assert 'REFRESH-INTERVAL' not in omitted
+    assert 'X-PUBLISHED-TTL' not in omitted

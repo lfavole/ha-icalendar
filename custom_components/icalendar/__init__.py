@@ -2,19 +2,32 @@
 
 from __future__ import annotations
 
-import homeassistant.helpers.config_validation as cv
+import logging
+import re
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SECRET, DOMAIN
+from .filters import compile_filter_pattern
 from .http import ICalendarView
-from .models import ICalendarRuntimeData, calendar_range, calendar_selection, feed_name
 from .location import CONF_GEOCODING_URL, LocationResolver
+from .models import (
+    ICalendarRuntimeData,
+    calendar_range,
+    calendar_selection,
+    feed_name,
+    filter_settings,
+    privacy_settings,
+    refresh_interval,
+)
 
+_LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iCalendar component."""
@@ -31,9 +44,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iCalendar from a config entry."""
     mode, entity_ids = calendar_selection(entry.data)
     history_weeks, future_weeks = calendar_range(entry.data)
+    filter_mode, filter_regex, filter_fields, case_sensitive, event_type = filter_settings(
+        entry.data
+    )
+    strip_description, strip_location, prefix_calendar_name = privacy_settings(entry.data)
+    interval = refresh_interval(entry.data)
+
+    compiled_pattern = None
+    if filter_regex:
+        try:
+            compiled_pattern = compile_filter_pattern(filter_regex, case_sensitive)
+        except re.error:
+            _LOGGER.warning(
+                "Invalid filter_regex configured on entry %s; regex filter disabled",
+                entry.entry_id,
+            )
+
     store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.events")
     cached = await store.async_load()
-
     entry.runtime_data = ICalendarRuntimeData(
         calendar_entity_ids=entity_ids,
         selection_mode=mode,
@@ -42,6 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         history_weeks=history_weeks,
         future_weeks=future_weeks,
         feed_name=feed_name(entry.data),
+        filter_mode=filter_mode,
+        filter_regex=filter_regex,
+        filter_fields=filter_fields,
+        filter_case_sensitive=case_sensitive,
+        event_type_filter=event_type,
+        strip_description=strip_description,
+        strip_location=strip_location,
+        prefix_calendar_name=prefix_calendar_name,
+        refresh_interval=interval,
+        compiled_pattern=compiled_pattern,
         cache=cached or {},
         store=store,
     )

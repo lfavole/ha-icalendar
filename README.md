@@ -71,6 +71,22 @@ A few practical notes:
 
 **Using the public Nominatim service?** Please read the [usage policy](https://operations.osmfoundation.org/policies/nominatim/) first — no confidential/personal data, attribution required, and a hard limit of 4 requests/minute with no distributed bulk use. This integration's rate limiter only applies per Home Assistant instance, so it can't enforce policy across multiple installs — for anything beyond light personal use, run your own or a suitably licensed hosted instance. OpenStreetMap geocoding data is © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), under the ODbL.
 
+## 🔍 Regex & Event Filtering
+
+You can filter and sanitize exported events per feed without affecting the underlying Home Assistant calendars:
+
+- **Regex filter mode** (`none`, `include`, `exclude`): Keep only matching events or drop matching events using a Python regular expression.
+- **Fields to match**: Match against `summary`, `description`, and/or `location` (case-insensitive by default, with an optional case-sensitive toggle).
+- **Event type filter** (`all`, `timed`, `all_day`): Export only timed appointments or only all-day events.
+- **Privacy stripping**: Independently strip `DESCRIPTION` and/or `LOCATION` (which also skips address geocoding) when sharing feeds externally.
+- **Calendar name prefixing**: Optionally prepend `[Calendar Name]` to each event summary in combined feeds.
+- **Multiple filtered views**: Create multiple feeds from the same calendar(s) as long as their filter or privacy settings differ.
+
+## ⏱️ Refresh Hints & HTTP Caching
+
+- **Client refresh hint (`refresh_interval`)**: Emits RFC 7986 `REFRESH-INTERVAL;VALUE=DURATION` and `X-PUBLISHED-TTL` headers (default `60` minutes; set `0` to omit).
+- **Conditional GET (`ETag` / `If-None-Match`)**: Unchanged feeds respond with `304 Not Modified` to reduce polling bandwidth, and include a safe `Content-Disposition` filename.
+
 ## ⚙️ Configuration parameters
 
 - **Setup**

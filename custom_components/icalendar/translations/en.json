@@ -2,7 +2,7 @@
   "title": "iCalendar API",
   "config": {
     "abort": {
-      "already_configured": "This calendar selection is already configured.",
+      "already_configured": "This calendar selection and filter configuration is already configured.",
       "reconfigure_successful": "Reconfiguration successful."
     },
     "error": {
@@ -12,7 +12,14 @@
       "invalid_selection_mode": "Choose include or exclude.",
       "invalid_geocoding_url": "Enter an HTTP(S) Nominatim search endpoint without credentials, query parameters, or a fragment.",
       "invalid_range": "History must be 0 or more weeks and future range must be at least 1 week, both within the allowed maximum.",
-      "feed_name_too_long": "Feed name must be 100 characters or fewer."
+      "feed_name_too_long": "Feed name must be 100 characters or fewer.",
+      "invalid_filter_mode": "Choose none, include matching, or exclude matching.",
+      "regex_required": "Enter a regular expression pattern when regex filtering is enabled.",
+      "regex_too_long": "Regular expression must be 500 characters or fewer.",
+      "invalid_regex": "Invalid regular expression syntax.",
+      "invalid_filter_fields": "Select at least one valid event field to match.",
+      "invalid_event_type": "Choose all events, timed events only, or all-day events only.",
+      "invalid_refresh_interval": "Refresh interval must be between 0 and 10080 minutes."
     },
     "step": {
       "user": {
@@ -22,15 +29,33 @@
           "feed_name": "Feed name (optional)",
           "selection_mode": "Selection mode",
           "calendar_entity_ids": "Calendars",
+          "filter_mode": "Regex filter mode",
+          "filter_regex": "Regex pattern (optional)",
+          "filter_fields": "Fields to match",
+          "filter_case_sensitive": "Case-sensitive regex match",
+          "event_type_filter": "Event type filter",
+          "strip_description": "Strip event descriptions",
+          "strip_location": "Strip event locations",
+          "prefix_calendar_name": "Prefix summary with calendar name",
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
-          "future_weeks": "Future events (weeks)"
+          "future_weeks": "Future events (weeks)",
+          "refresh_interval": "Client refresh hint (minutes)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
+          "filter_mode": "Optionally filter exported events using a Python regular expression.",
+          "filter_regex": "Regular expression matched against the selected event fields (e.g. ^(?!Private:).* or School|Soccer).",
+          "filter_fields": "Which event fields the regex pattern is tested against.",
+          "filter_case_sensitive": "When disabled, regex matching ignores letter case.",
+          "event_type_filter": "Restrict the feed to timed events only or all-day events only.",
+          "strip_description": "Omit event descriptions from the exported feed to avoid leaking private notes or meeting links.",
+          "strip_location": "Omit event locations (and skip address lookup) from the exported feed.",
+          "prefix_calendar_name": "Prepend [Calendar Name] to each event summary, useful for combined feeds.",
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
-          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year)."
+          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
         }
       },
       "reconfigure": {
@@ -41,15 +66,33 @@
           "feed_name": "Feed name (optional)",
           "selection_mode": "Selection mode",
           "calendar_entity_ids": "Calendars",
+          "filter_mode": "Regex filter mode",
+          "filter_regex": "Regex pattern (optional)",
+          "filter_fields": "Fields to match",
+          "filter_case_sensitive": "Case-sensitive regex match",
+          "event_type_filter": "Event type filter",
+          "strip_description": "Strip event descriptions",
+          "strip_location": "Strip event locations",
+          "prefix_calendar_name": "Prefix summary with calendar name",
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
-          "future_weeks": "Future events (weeks)"
+          "future_weeks": "Future events (weeks)",
+          "refresh_interval": "Client refresh hint (minutes)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
+          "filter_mode": "Optionally filter exported events using a Python regular expression.",
+          "filter_regex": "Regular expression matched against the selected event fields (e.g. ^(?!Private:).* or School|Soccer).",
+          "filter_fields": "Which event fields the regex pattern is tested against.",
+          "filter_case_sensitive": "When disabled, regex matching ignores letter case.",
+          "event_type_filter": "Restrict the feed to timed events only or all-day events only.",
+          "strip_description": "Omit event descriptions from the exported feed to avoid leaking private notes or meeting links.",
+          "strip_location": "Omit event locations (and skip address lookup) from the exported feed.",
+          "prefix_calendar_name": "Prepend [Calendar Name] to each event summary, useful for combined feeds.",
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
-          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year)."
+          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
         }
       }
     }
@@ -60,10 +103,17 @@
       "entity_not_found": "Selected calendar entity is unavailable. Ensure it is loaded and try again.",
       "no_calendars": "Select at least one calendar to include.",
       "invalid_selection_mode": "Choose include or exclude.",
-      "already_configured": "This calendar selection is already configured.",
       "invalid_geocoding_url": "Enter an HTTP(S) Nominatim search endpoint without credentials, query parameters, or a fragment.",
       "invalid_range": "History must be 0 or more weeks and future range must be at least 1 week, both within the allowed maximum.",
-      "feed_name_too_long": "Feed name must be 100 characters or fewer."
+      "feed_name_too_long": "Feed name must be 100 characters or fewer.",
+      "invalid_filter_mode": "Choose none, include matching, or exclude matching.",
+      "regex_required": "Enter a regular expression pattern when regex filtering is enabled.",
+      "regex_too_long": "Regular expression must be 500 characters or fewer.",
+      "invalid_regex": "Invalid regular expression syntax.",
+      "invalid_filter_fields": "Select at least one valid event field to match.",
+      "invalid_event_type": "Choose all events, timed events only, or all-day events only.",
+      "invalid_refresh_interval": "Refresh interval must be between 0 and 10080 minutes.",
+      "already_configured": "This calendar selection and filter configuration is already configured."
     },
     "step": {
       "init": {
@@ -74,15 +124,33 @@
           "feed_name": "Feed name (optional)",
           "selection_mode": "Selection mode",
           "calendar_entity_ids": "Calendars",
+          "filter_mode": "Regex filter mode",
+          "filter_regex": "Regex pattern (optional)",
+          "filter_fields": "Fields to match",
+          "filter_case_sensitive": "Case-sensitive regex match",
+          "event_type_filter": "Event type filter",
+          "strip_description": "Strip event descriptions",
+          "strip_location": "Strip event locations",
+          "prefix_calendar_name": "Prefix summary with calendar name",
           "geocoding_url": "Address lookup URL (optional)",
           "history_weeks": "Past events (weeks)",
-          "future_weeks": "Future events (weeks)"
+          "future_weeks": "Future events (weeks)",
+          "refresh_interval": "Client refresh hint (minutes)"
         },
         "data_description": {
           "feed_name": "Name shown for this calendar feed in apps like Google Calendar or Apple Calendar. Leave empty to use the default name.",
+          "filter_mode": "Optionally filter exported events using a Python regular expression.",
+          "filter_regex": "Regular expression matched against the selected event fields (e.g. ^(?!Private:).* or School|Soccer).",
+          "filter_fields": "Which event fields the regex pattern is tested against.",
+          "filter_case_sensitive": "When disabled, regex matching ignores letter case.",
+          "event_type_filter": "Restrict the feed to timed events only or all-day events only.",
+          "strip_description": "Omit event descriptions from the exported feed to avoid leaking private notes or meeting links.",
+          "strip_location": "Omit event locations (and skip address lookup) from the exported feed.",
+          "prefix_calendar_name": "Prepend [Calendar Name] to each event summary, useful for combined feeds.",
           "geocoding_url": "Nominatim-compatible search endpoint. Sends event locations to this provider for Apple Calendar maps. Leave empty to disable. See the documentation for provider requirements.",
           "history_weeks": "How far back to include past events, in weeks (e.g. 4 for a month, 52 for a year). Set to 0 to exclude past events.",
-          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year)."
+          "future_weeks": "How far ahead to include upcoming events, in weeks (e.g. 4 for a month, 52 for a year).",
+          "refresh_interval": "Suggested polling interval (REFRESH-INTERVAL / X-PUBLISHED-TTL) in minutes. Set to 0 to omit the header."
         }
       }
     }
@@ -92,6 +160,27 @@
       "options": {
         "include": "Include selected calendars",
         "exclude": "Exclude selected calendars"
+      }
+    },
+    "filter_mode": {
+      "options": {
+        "none": "No regex filter",
+        "include": "Include only matching events",
+        "exclude": "Exclude matching events"
+      }
+    },
+    "filter_fields": {
+      "options": {
+        "summary": "Summary (title)",
+        "description": "Description",
+        "location": "Location"
+      }
+    },
+    "event_type_filter": {
+      "options": {
+        "all": "All events",
+        "timed": "Timed events only",
+        "all_day": "All-day events only"
       }
     }
   }

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from datetime import datetime, timedelta, timezone
-from http import HTTPStatus
+import hashlib
 import hmac
+from http import HTTPStatus
+import logging
+import re
 from typing import Any
 
 from aiohttp import web
@@ -15,15 +17,41 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import (CONTENT_TYPE_ICAL, DEFAULT_FUTURE_WEEKS, DEFAULT_HISTORY_WEEKS,
-                    DOMAIN, URL_PATH_PREFIX, MODE_EXCLUDE, NAME)
+from .const import (
+    CONTENT_TYPE_ICAL,
+    DEFAULT_FUTURE_WEEKS,
+    DEFAULT_HISTORY_WEEKS,
+    DOMAIN,
+    MODE_EXCLUDE,
+    NAME,
+    URL_PATH_PREFIX,
+)
+from .filters import compile_filter_pattern, filter_and_transform_events
 from .ical import build_icalendar
-from .models import ICalendarRuntimeData
 from .location import LocationResolver
-
+from .models import ICalendarRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 FETCH_TIMEOUT = 15
+
+
+def _etag_matches(header_value: str, current_etag: str) -> bool:
+    """Return True if an If-None-Match header matches current_etag."""
+    for candidate in header_value.split(","):
+        token = candidate.strip()
+        if token == "*":
+            return True
+        if token.startswith("W/"):
+            token = token[2:].strip()
+        if token == current_etag:
+            return True
+    return False
+
+
+def _feed_filename(feed_title: str) -> str:
+    """Build a safe ASCII Content-Disposition filename for the feed."""
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", feed_title).strip(".-")
+    return f"{slug or 'calendar'}.ics"
 
 
 class ICalendarView(HomeAssistantView):
@@ -73,27 +101,72 @@ class ICalendarView(HomeAssistantView):
             return web.Response(body="503: Calendar temporarily unavailable",
                                 status=HTTPStatus.SERVICE_UNAVAILABLE,
                                 headers={"Retry-After": "60", "Cache-Control": "no-store"})
-        events = [
-            {**event, "_calendar_entity_id": entity_id}
+        raw_events = [
+            {
+                **event,
+                "_calendar_entity_id": entity_id,
+                "_calendar_name": result.get("name") or entity_id,
+            }
             for entity_id, result in zip(entity_ids, results)
             for event in result["events"]
         ]
 
-        if self.resolver and runtime_data.geocoding_url:
+        compiled_pattern = runtime_data.compiled_pattern
+        if compiled_pattern is None and runtime_data.filter_regex:
+            try:
+                compiled_pattern = compile_filter_pattern(
+                    runtime_data.filter_regex,
+                    runtime_data.filter_case_sensitive,
+                )
+            except re.error:
+                compiled_pattern = None
+
+        events = filter_and_transform_events(
+            raw_events,
+            filter_mode=runtime_data.filter_mode,
+            compiled_pattern=compiled_pattern,
+            filter_fields=runtime_data.filter_fields,
+            event_type_filter=runtime_data.event_type_filter,
+            strip_description=runtime_data.strip_description,
+            strip_location=runtime_data.strip_location,
+            prefix_calendar_name=runtime_data.prefix_calendar_name,
+        )
+
+        if self.resolver and runtime_data.geocoding_url and not runtime_data.strip_location:
             for event in events:
                 if point := await self.resolver.resolve(runtime_data.geocoding_url, event.get("location")):
                     event["_location_coordinates"] = point
 
         single_calendar = len(entity_ids) == 1
         default_name = results[0]["name"] if single_calendar else NAME
+        resolved_name = runtime_data.feed_name or default_name
         feed = build_icalendar(
             self.hass,
             entity_ids[0] if single_calendar else None,
-            runtime_data.feed_name or default_name,
+            resolved_name,
             events,
+            refresh_interval=runtime_data.refresh_interval,
         )
-        return web.Response(body=feed, content_type=CONTENT_TYPE_ICAL, charset="utf-8",
-                            headers={"Cache-Control": "no-store"})
+        etag = f'"{hashlib.sha256(feed.encode("utf-8")).hexdigest()[:32]}"'
+        headers = {
+            "Cache-Control": "no-store",
+            "ETag": etag,
+            "Content-Disposition": f'inline; filename="{_feed_filename(resolved_name)}"',
+        }
+        if request is not None and (headers_obj := getattr(request, "headers", None)):
+            if_none_match = headers_obj.get("If-None-Match")
+            if if_none_match and _etag_matches(if_none_match, etag):
+                return web.Response(
+                    status=HTTPStatus.NOT_MODIFIED,
+                    headers={"ETag": etag, "Cache-Control": "no-store"},
+                )
+
+        return web.Response(
+            body=feed,
+            content_type=CONTENT_TYPE_ICAL,
+            charset="utf-8",
+            headers=headers,
+        )
 
     async def _calendar_data(
         self, entity_id: str, runtime: ICalendarRuntimeData

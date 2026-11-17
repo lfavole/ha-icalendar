@@ -27,6 +27,7 @@ def build_icalendar(
     entity_id: str | None,
     calendar_name: str,
     events: list[dict[str, Any]],
+    refresh_interval: int = 0,
 ) -> str:
     """Build iCalendar feed output using HA's shared ical library."""
     calendar = Calendar()
@@ -43,6 +44,7 @@ def build_icalendar(
         output,
         calendar_name=calendar_name,
         calendar_color=resolve_calendar_color(hass, entity_id),
+        refresh_interval=refresh_interval,
     )
 
 
@@ -69,8 +71,13 @@ def fold_line(line: str) -> str:
     return "\r\n".join(lines)
 
 
-def inject_calendar_metadata(ics: str, calendar_name: str, calendar_color: str | None) -> str:
-    """Inject NAME/X-WR-CALNAME/COLOR in VCALENDAR headers."""
+def inject_calendar_metadata(
+    ics: str,
+    calendar_name: str,
+    calendar_color: str | None,
+    refresh_interval: int = 0,
+) -> str:
+    """Inject NAME/X-WR-CALNAME/COLOR/REFRESH-INTERVAL in VCALENDAR headers."""
     # The pinned serializer folds by characters and omits DATE parameters.
     # Unfold before applying the wire-format constraints ourselves.
     unfolded = re.sub(r"\n[ \t]", "", ics.replace("\r\n", "\n"))
@@ -86,6 +93,10 @@ def inject_calendar_metadata(ics: str, calendar_name: str, calendar_color: str |
         if not inserted and line == "VERSION:2.0":
             injected.append(fold_line(f"NAME:{escape_text(calendar_name)}"))
             injected.append(fold_line(f"X-WR-CALNAME:{escape_text(calendar_name)}"))
+            if refresh_interval > 0:
+                duration = f"PT{refresh_interval}M"
+                injected.append(f"REFRESH-INTERVAL;VALUE=DURATION:{duration}")
+                injected.append(f"X-PUBLISHED-TTL:{duration}")
             if calendar_color and is_css_color_name(calendar_color):
                 injected.append(f"COLOR:{calendar_color}")
             elif calendar_color and is_hex_color(calendar_color):

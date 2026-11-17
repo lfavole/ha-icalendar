@@ -2,7 +2,7 @@
   "title": "iCalendar API",
   "config": {
     "abort": {
-      "already_configured": "Cette sélection de calendriers est déjà configurée.",
+      "already_configured": "Cette sélection de calendriers et de filtres est déjà configurée.",
       "reconfigure_successful": "Reconfiguration réussie."
     },
     "error": {
@@ -12,7 +12,14 @@
       "invalid_selection_mode": "Choisissez inclure ou exclure.",
       "invalid_geocoding_url": "Indiquez un point d'accès de recherche Nominatim en HTTP(S), sans identifiants, paramètres de requête ni fragment.",
       "invalid_range": "L'historique doit être de 0 semaine ou plus et la période future d'au moins 1 semaine, chacun dans la limite maximale autorisée.",
-      "feed_name_too_long": "Le nom du flux doit contenir 100 caractères maximum."
+      "feed_name_too_long": "Le nom du flux doit contenir 100 caractères maximum.",
+      "invalid_filter_mode": "Choisissez aucun filtre, inclure les correspondances ou exclure les correspondances.",
+      "regex_required": "Saisissez une expression régulière lorsque le filtrage par regex est activé.",
+      "regex_too_long": "L'expression régulière doit contenir 500 caractères maximum.",
+      "invalid_regex": "Syntaxe d'expression régulière invalide.",
+      "invalid_filter_fields": "Sélectionnez au moins un champ d'événement valide à analyser.",
+      "invalid_event_type": "Choisissez tous les événements, uniquement les événements planifiés ou uniquement les journées entières.",
+      "invalid_refresh_interval": "L'intervalle d'actualisation doit être compris entre 0 et 10080 minutes."
     },
     "step": {
       "user": {
@@ -22,15 +29,33 @@
           "feed_name": "Nom du flux (facultatif)",
           "selection_mode": "Mode de sélection",
           "calendar_entity_ids": "Calendriers",
+          "filter_mode": "Mode de filtre regex",
+          "filter_regex": "Expression régulière (facultatif)",
+          "filter_fields": "Champs analysés",
+          "filter_case_sensitive": "Sensible à la casse",
+          "event_type_filter": "Type d'événements",
+          "strip_description": "Masquer les descriptions",
+          "strip_location": "Masquer les lieux",
+          "prefix_calendar_name": "Préfixer le titre par le nom du calendrier",
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
-          "future_weeks": "Événements futurs (semaines)"
+          "future_weeks": "Événements futurs (semaines)",
+          "refresh_interval": "Fréquence d'actualisation client (minutes)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
+          "filter_mode": "Filtrez éventuellement les événements exportés à l'aide d'une expression régulière Python.",
+          "filter_regex": "Expression régulière appliquée aux champs sélectionnés (par ex. ^(?!Privé:).* ou École|Foot).",
+          "filter_fields": "Champs d'événement sur lesquels l'expression régulière est testée.",
+          "filter_case_sensitive": "Si désactivé, la recherche ignore la casse des caractères.",
+          "event_type_filter": "Limitez le flux aux événements avec horaire ou aux événements sur la journée entière.",
+          "strip_description": "Omet les descriptions des événements exportés pour éviter de partager des notes ou liens privés.",
+          "strip_location": "Omet les lieux des événements (et désactive la recherche d'adresse) dans le flux exporté.",
+          "prefix_calendar_name": "Ajoute [Nom du calendrier] devant chaque titre d'événement, utile pour les flux combinés.",
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
-          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an)."
+          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
         }
       },
       "reconfigure": {
@@ -41,15 +66,33 @@
           "feed_name": "Nom du flux (facultatif)",
           "selection_mode": "Mode de sélection",
           "calendar_entity_ids": "Calendriers",
+          "filter_mode": "Mode de filtre regex",
+          "filter_regex": "Expression régulière (facultatif)",
+          "filter_fields": "Champs analysés",
+          "filter_case_sensitive": "Sensible à la casse",
+          "event_type_filter": "Type d'événements",
+          "strip_description": "Masquer les descriptions",
+          "strip_location": "Masquer les lieux",
+          "prefix_calendar_name": "Préfixer le titre par le nom du calendrier",
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
-          "future_weeks": "Événements futurs (semaines)"
+          "future_weeks": "Événements futurs (semaines)",
+          "refresh_interval": "Fréquence d'actualisation client (minutes)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
+          "filter_mode": "Filtrez éventuellement les événements exportés à l'aide d'une expression régulière Python.",
+          "filter_regex": "Expression régulière appliquée aux champs sélectionnés (par ex. ^(?!Privé:).* ou École|Foot).",
+          "filter_fields": "Champs d'événement sur lesquels l'expression régulière est testée.",
+          "filter_case_sensitive": "Si désactivé, la recherche ignore la casse des caractères.",
+          "event_type_filter": "Limitez le flux aux événements avec horaire ou aux événements sur la journée entière.",
+          "strip_description": "Omet les descriptions des événements exportés pour éviter de partager des notes ou liens privés.",
+          "strip_location": "Omet les lieux des événements (et désactive la recherche d'adresse) dans le flux exporté.",
+          "prefix_calendar_name": "Ajoute [Nom du calendrier] devant chaque titre d'événement, utile pour les flux combinés.",
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
-          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an)."
+          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
         }
       }
     }
@@ -60,10 +103,17 @@
       "entity_not_found": "L'entité calendrier sélectionnée est indisponible. Vérifiez qu'elle est chargée puis réessayez.",
       "no_calendars": "Sélectionnez au moins un calendrier à inclure.",
       "invalid_selection_mode": "Choisissez inclure ou exclure.",
-      "already_configured": "Cette sélection de calendriers est déjà configurée.",
       "invalid_geocoding_url": "Indiquez un point d'accès de recherche Nominatim en HTTP(S), sans identifiants, paramètres de requête ni fragment.",
       "invalid_range": "L'historique doit être de 0 semaine ou plus et la période future d'au moins 1 semaine, chacun dans la limite maximale autorisée.",
-      "feed_name_too_long": "Le nom du flux doit contenir 100 caractères maximum."
+      "feed_name_too_long": "Le nom du flux doit contenir 100 caractères maximum.",
+      "invalid_filter_mode": "Choisissez aucun filtre, inclure les correspondances ou exclure les correspondances.",
+      "regex_required": "Saisissez une expression régulière lorsque le filtrage par regex est activé.",
+      "regex_too_long": "L'expression régulière doit contenir 500 caractères maximum.",
+      "invalid_regex": "Syntaxe d'expression régulière invalide.",
+      "invalid_filter_fields": "Sélectionnez au moins un champ d'événement valide à analyser.",
+      "invalid_event_type": "Choisissez tous les événements, uniquement les événements planifiés ou uniquement les journées entières.",
+      "invalid_refresh_interval": "L'intervalle d'actualisation doit être compris entre 0 et 10080 minutes.",
+      "already_configured": "Cette sélection de calendriers et de filtres est déjà configurée."
     },
     "step": {
       "init": {
@@ -74,15 +124,33 @@
           "feed_name": "Nom du flux (facultatif)",
           "selection_mode": "Mode de sélection",
           "calendar_entity_ids": "Calendriers",
+          "filter_mode": "Mode de filtre regex",
+          "filter_regex": "Expression régulière (facultatif)",
+          "filter_fields": "Champs analysés",
+          "filter_case_sensitive": "Sensible à la casse",
+          "event_type_filter": "Type d'événements",
+          "strip_description": "Masquer les descriptions",
+          "strip_location": "Masquer les lieux",
+          "prefix_calendar_name": "Préfixer le titre par le nom du calendrier",
           "geocoding_url": "URL de recherche d'adresse (facultatif)",
           "history_weeks": "Événements passés (semaines)",
-          "future_weeks": "Événements futurs (semaines)"
+          "future_weeks": "Événements futurs (semaines)",
+          "refresh_interval": "Fréquence d'actualisation client (minutes)"
         },
         "data_description": {
           "feed_name": "Nom affiché pour ce flux de calendrier dans les applications comme Google Calendar ou Apple Calendar. Laissez vide pour utiliser le nom par défaut.",
+          "filter_mode": "Filtrez éventuellement les événements exportés à l'aide d'une expression régulière Python.",
+          "filter_regex": "Expression régulière appliquée aux champs sélectionnés (par ex. ^(?!Privé:).* ou École|Foot).",
+          "filter_fields": "Champs d'événement sur lesquels l'expression régulière est testée.",
+          "filter_case_sensitive": "Si désactivé, la recherche ignore la casse des caractères.",
+          "event_type_filter": "Limitez le flux aux événements avec horaire ou aux événements sur la journée entière.",
+          "strip_description": "Omet les descriptions des événements exportés pour éviter de partager des notes ou liens privés.",
+          "strip_location": "Omet les lieux des événements (et désactive la recherche d'adresse) dans le flux exporté.",
+          "prefix_calendar_name": "Ajoute [Nom du calendrier] devant chaque titre d'événement, utile pour les flux combinés.",
           "geocoding_url": "Point d'accès de recherche compatible Nominatim. Les lieux des événements y sont envoyés pour les cartes d'Apple Calendar. Laissez vide pour désactiver. Voir la documentation pour les exigences du fournisseur.",
           "history_weeks": "Jusqu'où remonter pour inclure les événements passés, en semaines (par ex. 4 pour un mois, 52 pour un an). Mettez 0 pour exclure les événements passés.",
-          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an)."
+          "future_weeks": "Jusqu'où aller dans le futur pour inclure les événements à venir, en semaines (par ex. 4 pour un mois, 52 pour un an).",
+          "refresh_interval": "Intervalle de rafraîchissement conseillé (REFRESH-INTERVAL / X-PUBLISHED-TTL) en minutes. Mettez 0 pour omettre l'en-tête."
         }
       }
     }
@@ -92,6 +160,27 @@
       "options": {
         "include": "Inclure les calendriers sélectionnés",
         "exclude": "Exclure les calendriers sélectionnés"
+      }
+    },
+    "filter_mode": {
+      "options": {
+        "none": "Aucun filtre regex",
+        "include": "Inclure uniquement les correspondances",
+        "exclude": "Exclure les correspondances"
+      }
+    },
+    "filter_fields": {
+      "options": {
+        "summary": "Titre (summary)",
+        "description": "Description",
+        "location": "Lieu (location)"
+      }
+    },
+    "event_type_filter": {
+      "options": {
+        "all": "Tous les événements",
+        "timed": "Événements avec horaire uniquement",
+        "all_day": "Événements journée entière uniquement"
       }
     }
   }
